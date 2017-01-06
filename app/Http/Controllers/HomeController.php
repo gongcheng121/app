@@ -25,7 +25,7 @@ class HomeController extends Controller
 
 
     protected $client;
-    protected $i=1;
+    protected $i = 1;
 
     protected $result;
 
@@ -40,12 +40,22 @@ class HomeController extends Controller
     |
     */
 
-    public function index(){
+    public function index()
+    {
+        $stepOneUrl = 'https://login.wx.qq.com/jslogin?appid=wx782c26e4c19acffb&redirect_uri=https%3A%2F%2Fwx.qq.com%2Fcgi-bin%2Fmmwebwx-bin%2Fwebwxnewloginpage&fun=new&lang=zh_CN&_=1483607230848';
+
+        $stepOneResponse = Curl::to($stepOneUrl)->get();
+        preg_match('/"(.*?)"/',$stepOneResponse,$match);
+        $uuid = $match[1];
+        session('uuid',$uuid);
+
+        return view('wechatBoot.index',compact('uuid'));
 
     }
 
 
-    public function index5(){
+    public function index5()
+    {
 
 
         $url = 'http://www.faisco.cn/validateCode.jsp?232';
@@ -55,18 +65,18 @@ class HomeController extends Controller
         $res = $im;
         $size = getimagesize($url);
 
-        
+
         $wid = $size['0'];
         $hid = $size['1'];
-        for ($i = 0; $i < $hid; ++ $i) {
-            for ($j = 0; $j < $wid; ++ $j) {
+        for ($i = 0; $i < $hid; ++$i) {
+            for ($j = 0; $j < $wid; ++$j) {
                 $rgb = imagecolorat($res, $j, $i);
                 $rgbArray[$i][$j] = imagecolorsforindex($res, $rgb);
             }
         }
 
-        for ($i = 0; $i < $hid; $i ++) {
-            for ($j = 0; $j < $wid; $j ++) {
+        for ($i = 0; $i < $hid; $i++) {
+            for ($j = 0; $j < $wid; $j++) {
 
                 if ($rgbArray[$i][$j]['red'] >= 90) {
                     echo '□';
@@ -78,62 +88,62 @@ class HomeController extends Controller
         }
 
     }
-    public function index4(){
+
+    public function index4()
+    {
 
 
-            $curl = Curl::to('http://webchat.b.qq.com/cgi/d?t=49046234670303734');
-            $curl->withData('kfcookie=kfskey:F81594F6775E258CA059D9A11BE7FC11E44A7DA9D79785606362CDBE1432470D$kfguin:1153865567$ext:1001&rt_status=200&rt_block=244&rt_wait=0&rt_recv=1&kfguin=1153865567&ext=1001&cid=17211944&uin=800017713&ty=1&msg='.str_random('10').'&idx=1480063165&');
-            $response = $curl->post();
+        $curl = Curl::to('http://webchat.b.qq.com/cgi/d?t=49046234670303734');
+        $curl->withData('kfcookie=kfskey:F81594F6775E258CA059D9A11BE7FC11E44A7DA9D79785606362CDBE1432470D$kfguin:1153865567$ext:1001&rt_status=200&rt_block=244&rt_wait=0&rt_recv=1&kfguin=1153865567&ext=1001&cid=17211944&uin=800017713&ty=1&msg=' . str_random('10') . '&idx=1480063165&');
+        $response = $curl->post();
 
         dd($response);
 
     }
+
     public function index3()
     {
 
 
         $this->client = new Client();
 
-        $this->result =[];
+        $this->result = [];
         $r = $this->getBody();
         return ($r);
-
-
 
 
 //        return
 
 
-
-
     }
 
-    function getBody($time=null){
+    function getBody($time = null)
+    {
         $this->i++;
-        $uri = 'https://shequ.yunzhijia.com/thirdapp/forum/getMsgList?forward=false&networkId=57a4a514e4b0074d5e546b1f'.'&t='.Carbon::now()->timestamp*1000;
-        if($time){
-            $uri.='&separator='.$time;
+        $uri = 'https://shequ.yunzhijia.com/thirdapp/forum/getMsgList?forward=false&networkId=57a4a514e4b0074d5e546b1f' . '&t=' . Carbon::now()->timestamp * 1000;
+        if ($time) {
+            $uri .= '&separator=' . $time;
         }
 
-        $u[]=$uri;
-        $c=  $this->client->request('GET',$uri);
+        $u[] = $uri;
+        $c = $this->client->request('GET', $uri);
         $body = $c->getBody();
 
 
-
-        $body = (\Qiniu\json_decode($body)->message) ;
-        if(sizeof($body)==0){
+        $body = (\Qiniu\json_decode($body)->message);
+        if (sizeof($body) == 0) {
             return $this->result;
         }
-        $this->result =array_merge($this->result,$body);
+        $this->result = array_merge($this->result, $body);
         $s_time = collect($body)->last()->updateTime;
 
-        if($this->i<=20){
-            $this->getBody($s_time,$this->result);
+        if ($this->i <= 20) {
+            $this->getBody($s_time, $this->result);
         }
 
         return $this->result;
     }
+
     public function Rss()
     {
 

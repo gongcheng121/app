@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendWechatMessage;
 use App\Model\GuangDian;
 use App\Model\GuangdianCode;
 use App\Model\GuangDianHelpLog;
@@ -251,6 +252,10 @@ class GuangDiansController extends Controller
                 'data' => $return,
             ];
 
+            $job = (new SendWechatMessage('@3b4a787accd7abbaaf5448416dd076e0f85fd794f7428e55024c66d81e65c0d2',Carbon::now().$member['nickname'].'获得了'.$data['prize']))
+                ->onConnection(env('QUEUE_DRIVER', 'database'))
+                ->onQueue(env('JOB_QUEUE', 'default'));
+            dispatch($job);
             if ($request->wantsJson()) {
 
                 return response()->json($response);
@@ -348,6 +353,13 @@ class GuangDiansController extends Controller
         }
         $this->repository->find($gift_id)->increment('help_counts', 1);
         $this->help_log_repository->create(['openid' => $member['openid'], 'to_openid' => $to_openid, 'gift_id' => $gift_id]);
+
+        $job = (new SendWechatMessage('@3b4a787accd7abbaaf5448416dd076e0f85fd794f7428e55024c66d81e65c0d2',Carbon::now().$member['nickname'].'帮助了'.$to_openid))
+            ->onConnection(env('QUEUE_DRIVER', 'database'))
+            ->onQueue(env('JOB_QUEUE', 'default'));
+        dispatch($job);
+
+
         return response()->json(['msg' => '帮助成功']);
 
     }

@@ -95,3 +95,16 @@ function getWecahtInfo($key){
     });
     return $wechat_info;
 }
+/**
+ * 获取当前时间戳精确到毫秒级
+ *
+ * @access private
+ * @return string
+ *
+ **/
+function getMillisecond()
+{
+    list($usec, $sec) = explode(" ", microtime());
+    return (float)sprintf('%.0f',(floatval($usec)+floatval($sec))*1000);
+}
+

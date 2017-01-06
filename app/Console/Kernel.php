@@ -18,6 +18,8 @@ class Kernel extends ConsoleKernel
          Commands\Rss::class,
          Commands\Test::class,
         // Commands\Inspire::class,
+        Commands\WechatListen::class,
+        Commands\WechatSend::class,
     ];
 
     /**

@@ -68,7 +68,8 @@ class ActivityRoutes
             'hongfu'=>'HongFusController',//鸿福,
             'guangdian'=>'GuangDiansController',//广电拆礼包,
             'dahevote'=>'DaheVotesController',//大河鱼投票
-            'lyj'=>'LvYouJuController',//旅游局游戏
+            'lyj'=>'LvYouJuController',//旅游局游戏,
+            'wechatboot'=>'WechatBootController',//微信机器人
         ]);
         $router->any('baby/upload','BabyInfosController@upload');//视频上传
         $router->resource('baby', 'BabyInfosController');
