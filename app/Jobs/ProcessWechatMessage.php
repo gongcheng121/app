@@ -3,8 +3,9 @@
 namespace App\Jobs;
 
 use App\Extensions\Wechat\MessageType;
-use Illuminate\Support\Facades\Event;
+use Event;
 use Illuminate\Bus\Queueable;
+use App\Events\WechatMessageEvent;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -92,9 +93,7 @@ class ProcessWechatMessage implements ShouldQueue
                 break;
         }
 
-
-
         // fire event to consumers
-//        Event::fire(new WechatMessageEvent($this->type, $this->from, $this->to, $this->value, $this->info));
+        Event::fire(new WechatMessageEvent($this->type, $this->from, $this->to, $this->value, $this->info));
     }
 }

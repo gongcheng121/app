@@ -4,10 +4,12 @@ namespace App\Jobs;
 
 use App\Extensions\Wechat\MessageType;
 use App\Extensions\Wechat\WebApi;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Cache;
 use Ixudra\Curl\Facades\Curl;
 
 class WechatRobootMessage extends Job implements ShouldQueue
@@ -97,39 +99,43 @@ class WechatRobootMessage extends Job implements ShouldQueue
                 $this->value = array_get($this->info, 'Content');
                 break;
         }
-        echo $this->from['NickName'].' to '.$this->to['NickName'].':'.dump($this->value).'';
-        $can_arr = [
-            '@df0dba46f89ca671a19eabec060771898f75aab0198cdea78337becf4929f77a',
-            '@@a9cf9a45fb3430b8a9f8fc4e4bfafac7842e17767cfedbae2ec74653fdf1e7c0',
-            '@@80e3d3056da04320cba6ddc58cc2e78e6347346af3638defba4e3f8512f9f434',
-            '@@8cfa419581521de0dc96e15261f159e305a4c2cd6ffd42a0edd31824aee78015',
-            '@3b4a787accd7abbaaf5448416dd076e0f85fd794f7428e55024c66d81e65c0d2',//邓平
-            '@58668b1e0795870004fcf7f39d72e719',//微软小兵
-            ''
-        ];
-
-            if (in_array($this->from['UserName'], $can_arr)) {
+        echo $this->from['NickName'] . ' to ' . $this->to['NickName'] . ':' . dump($this->value) . '';
+        $can_arr = Cache::get('can_arr', function () use ($api) {
+            $arr = [
+                $api->getContact()->getUserByNick('苦逼九人组')['UserName'],
+                $api->getContact()->getUserByNick('暖暖')['UserName'],
+                $api->getContact()->getUserByNick('哎呀呀。')['UserName'],
+                $api->getContact()->getUserByNick('贺亚飞')['UserName'],
+                $api->getContact()->getUserByNick('赵彤')['UserName'],
+                $api->getContact()->getUserByNick('在路上')['UserName'],
+                $api->getContact()->getUserByNick('鲁智钢')['UserName'],
+            ];
+            $expiresAt = Carbon::now()->addDay(1)->diffInMinutes();
+            Cache::add('can_arr', $arr, $expiresAt);
+            return $arr;
+        });
+        if (in_array($this->from['UserName'], $can_arr)) {
 
 //            $this->from['Type']=='group'; //内容发送到群
+            $nick = $this->from['NickName'];
+//            $api->sendMessage($this->from['UserName'], '@' . $nick . "  AI接入中" );
 
+            $tulin_url = 'http://www.tuling123.com/openapi/api';
+            $response = Curl::to($tulin_url)->withData([
+                'key' => '6e502081a6da41f4b66e0f0cce3a3797',
+                'info' => $this->value,
+                'userid' => '@ebff77f5b468f36fcba3e31fe7c71642'
+            ])->asJson(true)
+                ->post();
 
-                $tulin_url = 'http://www.tuling123.com/openapi/api';
-                $response = Curl::to($tulin_url)->withData([
-                    'key' => '6e502081a6da41f4b66e0f0cce3a3797',
-                    'info' => $this->value,
-                    'userid' => '@ebff77f5b468f36fcba3e31fe7c71642'
-                ])->asJson(true)
-                    ->post();
-                $nick = '';
-                if ($this->from['Type'] == 'group') {
-                    $nick = $this->to['NickName'];
-                }
-                if ($response['code'] == 100000) {
-                    $api->sendMessage($this->from['UserName'], '@' . $nick . "  " . $response['text']);
-                }
-
+            if ($this->from['Type'] == 'group') {
+                $nick = $this->to['NickName'];
             }
-            
+            if ($response['code'] == 100000) {
+                $api->sendMessage($this->from['UserName'], '@' . $nick . "  AI:" . $response['text']);
+            }
+
+        }
 
 
 //        $this->type, $this->from, $this->to, $this->value, $this->info

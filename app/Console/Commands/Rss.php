@@ -45,16 +45,29 @@ class Rss extends Command
     {
         Cron::create(['type'=>'RssMake_start']);
         //
-        $feed = new Feed();
+        $feed_liebao = new Feed();
+        $feed_bjh = new Feed();
 
         $channel = new Channel();
+        $channel_bjh = new Channel();
         $channel
             ->title('亚心网新闻')
             ->description('亚心网热点新闻')
             ->url('http://www.iyaxin.com')
             ->language('zh-cn')
             ->pubDate(strtotime(date("Y-m-d H:i:s",time())))
-            ->appendTo($feed);
+            ->appendTo($feed_liebao);
+
+        $channel_bjh
+            ->title('亚心网新闻')
+            ->description('亚心网热点新闻')
+            ->url('http://www.iyaxin.com')
+            ->image('http://app.iyaxin.com/images/iyaxin_logo.png')
+            ->language('zh-cn')
+            ->pubDate(strtotime(date("Y-m-d H:i:s",time())))
+            ->appendTo($feed_liebao);
+
+        $channel_bjh->appendTo($feed_bjh); // 同步到百家号
 
         $response = Curl::to('http://220.171.90.234:9033/spider/')->get();
 //        TODO  Koala 增加动态规则调用
@@ -80,6 +93,10 @@ class Rss extends Command
                     ->contentEncoded($content)
                     ->pubDate(strtotime($v->pub_time))
                     ->appendTo($channel);
+
+                $item->url('http://app.iyaxin.com/content/view/' .$t. '/'.md5($v->article_title).'.html?id=baijiahao')
+                    ->appendTo($channel_bjh);
+
                 $title = $v->article_title;
 
                 $pubtime =$v->pub_time;
@@ -92,7 +109,8 @@ class Rss extends Command
 
         }
 
-        Storage::disk('public-uploads')->put("feed/rss.rss",$feed);
+        Storage::disk('public-uploads')->put("feed/rss.rss",$feed_liebao);
+        Storage::disk('public-uploads')->put("feed/bjh/rss.rss",$feed_bjh);
 
         Cron::create(['type'=>'RssMake_end']);
 //        return response($feed)
