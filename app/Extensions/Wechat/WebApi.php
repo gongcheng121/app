@@ -819,8 +819,8 @@ class WebApi
             }
             try {
                 $job = (new WechatRobootMessage($message['MsgType'], $from, $to, $value, $message))
-                    ->onConnection(env('QUEUE_DRIVER', 'database'))
-                    ->onQueue(env('JOB_QUEUE', 'default'));
+                    ->onConnection('redis')
+                    ->onQueue('wechat');
                 dispatch($job);
             } catch (Exception $e) {
                 Log::error('can not push message in job ' . $e->getMessage());
@@ -1186,7 +1186,7 @@ class WebApi
     {
         if (Storage::exists('wechat/core_state.txt')) {
             $core_state = unserialize(Storage::get('wechat/core_state.txt'));
-            return new WebApi(['debug' => $debug] + $core_state['clientOptions'], array_except($core_state, 'clientOptions'));
+            return new WebApi(['debug' => false] + $core_state['clientOptions'], array_except($core_state, 'clientOptions'));
         } else {
             return new WebApi();
         }

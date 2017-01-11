@@ -37,6 +37,9 @@ class SendWechatMessage extends Job implements ShouldQueue
         //
 
         $this->api = WebApi::restoreState();
-        $this->api->sendMessage($this->to, $this->msg);
+
+        $uuid = $this->api->getContact()->getUserByNick('哎呀呀。')['UserName'];
+
+//        dd($this->api->sendMessage($uuid, $this->msg));
     }
 }
